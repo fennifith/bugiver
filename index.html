@@ -13,16 +13,62 @@ permalink: /
 			to do in an attempt to encourage myself to contribute to more repositories than I create. Its source code, which you can find on
 			<a href="/redirects/?t=github&d=bugiver">GitHub</a>, is published under the Apache 2.0 License.
 		</p>
-		<div id="signin">
-			<p>To start bug hunting, sign into your GitHub account below to give this website access to your account.</p>
-			<button id="signinbutton">Sign In</button>
-		</div>
+		<p>To start bug hunting, sign into your GitHub account below to give this website access to your account.</p>
+		<button onclick="location.href='https://github.com/login/oauth/authorize?client_id={{ site.client_id }}';">Sign In</button>
 	</div>
-	<div id="issue">
-		<button onclick="location.href='/';">Random Issue</button>
+	<div id="option" style="display: none;">
+		<h1>Options</h1>
+		<button onclick="randomIssue();">Done</button>
+	</div>
+	<div id="issue" style="display: none;">
+		
+		<button onclick="randomIssue();">Next Bug</button>
 	</div>
 	<br><br>
 </main>
 
+<script type="text/javascript" src="https://jfenn.me/js/utils.js">
 <script>
+	const infoElement = document.getElementById("info");
+	const optionElement = document.getElementById("option");
+	const issueElement = document.getElementByid("issue");
+
+	var token = localStorage.getItem("access_token");
+
+	let args = UrlUtil.getCurrentArguments();
+	if (args.code) {
+		infoElement.style.display = "none";
+		req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.responseText);
+				if (obj.access_token) {
+					token = obj.access_token;
+					if (localStorage)
+						localStorage.setItem("access_token", obj.access_token);
+				}
+			}
+		};
+		req.open("GET", "https://secreter.herokuapp.com/{{ site.client_id }}/" + args.code, true);
+		req.send();
+	} else if (token) {
+		infoElement.style.display = "none";
+		if (args.repo && args.issue) 
+			loadIssue(args.repo, args.issue);
+		else {
+			optionElement.style.display = null;
+		}
+	}
+
+	function randomIssue() {
+		infoElement.style.display = "none";
+		optionElement.style.display = "none";
+		issueElement.style.display = "none";
+	}
+
+	function loadIssue(repo, issue) {
+		infoElement.style.display = "none";
+		optionElement.style.display = "none";
+		issueElement.style.display = "none";
+	}
 </script>
