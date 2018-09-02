@@ -28,7 +28,7 @@ permalink: /
 </main>
 
 <script type="text/javascript" src="https://jfenn.me/js/utils.js">
-<script>
+<script type="text/javascript">
 	const infoElement = document.getElementById("info");
 	const optionElement = document.getElementById("option");
 	const issueElement = document.getElementByid("issue");
@@ -36,9 +36,10 @@ permalink: /
 	var token = localStorage.getItem("access_token");
 
 	let args = UrlUtil.getCurrentArguments();
+	console.log(args);
 	if (args.code) {
 		infoElement.style.display = "none";
-		req = new XMLHttpRequest();
+		var req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
