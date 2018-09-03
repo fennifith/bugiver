@@ -28,12 +28,12 @@ layout: default
 		var req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-				let obj = JSON.parse(req.contentText);
-				if (obj.token) {
+				let obj = JSON.parse(req.responseText);
+				if (obj.access_token) {
 					if (localStorage) {
-						localStorage.setItem("{{ site.storage_id }}/access_token", obj.token);
+						localStorage.setItem("{{ site.storage_id }}/access_token", obj.access_token);
 						go("../");
-					} else go("../?token=" + token);
+					} else go("../?token=" + obj.access_token);
 				} else go("./?error=no_token");
 			}
 		};
