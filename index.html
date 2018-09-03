@@ -33,29 +33,16 @@ permalink: /
 	const optionElement = document.getElementById("option");
 	const issueElement = document.getElementById("issue");
 
-	var token = localStorage.getItem("access_token");
-
 	let args = UrlUtil.getCurrentArguments();
-	console.log(args);
-	if (args.code) {
+	const token = args.token ? args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
+
+	if (token) configureIssue();
+
+	function configureIssue() {
 		infoElement.style.display = "none";
-		var req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-				let obj = JSON.parse(req.responseText);
-				console.log(obj);
-				if (obj.access_token) {
-					token = obj.access_token;
-					if (localStorage)
-						localStorage.setItem("access_token", obj.access_token);
-				}
-			}
-		};
-		req.open("GET", "https://secreter.herokuapp.com/{{ site.client_id }}/" + args.code, true);
-		req.send();
-	} else if (token) {
-		infoElement.style.display = "none";
-		if (args.repo && args.issue) 
+		issueElement.style.display = "none";
+		
+		if (args.repo && args.issue)
 			loadIssue(args.repo, args.issue);
 		else {
 			optionElement.style.display = null;

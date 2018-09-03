@@ -1,0 +1,63 @@
+---
+layout: default
+---
+
+<main>
+	<br><br>
+	<div style="text-align: center;">
+		<h1 id="title">Authenticating...</h1>
+		<p id="content">
+			This should only take a moment. If you are not redirected automatically, click <a href="/">here</a>.
+		</p>
+		<div id="action" style="display: none;">
+			<p>Please report this problem on GitHub by using <a href="/redirects/?t=github&d=bugiver/issues/new">this link</a> to create a new issue.</p>
+		</div>
+	</div>
+	<br><br>
+</main>
+
+<script type="text/javascript" src="https://jfenn.me/js/utils.js"></script>
+<script type="text/javascript">
+	const titleElement = document.getElementById("title");
+	const contentElement = document.getElementById("content");
+	const actionElement = document.getElementById("action");
+
+	let args = UrlUtil.getCurrentArguments();
+
+	if (args.code) {
+		var req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.contentText);
+				if (obj.token) {
+					if (localStorage) {
+						localStorage.setItem("{{ site.storage_id }}/access_token", obj.token);
+						go("../");
+					} else go("../?token=" + token);
+				} else go("./?error=no_token");
+			}
+		};
+		req.open("GET", "https://secreter.herokuapp.com/{{ site.client_id }}/" + args.code, true);
+		req.send();
+	} else {
+		try {
+			titleElement.innerText = "Error: " + args.error.replace(/(_)/g, " ");
+		} catch (e) {
+			titleElement.innerText = "An Error Occurred";
+		}
+		
+		try {
+			contentElement.innerText = args.error_description.replace(/[_+]/g, " ");
+		} catch (e) {
+			contentElement.innerText = "Despite how useful it might be, there isn't an error message.";
+		}
+
+		actionElement.style.display = null;
+	}
+
+	function go(url) {
+		if (window.location.redirect)
+			window.location.redirect(url);
+		else window.location = url;
+	}
+</script>
