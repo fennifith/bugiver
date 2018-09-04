@@ -1,0 +1,16 @@
+<script type="text/javascript">
+	const _loadingFunctions = [];
+
+	function addOnLoad(func) {
+		_loadingFunctions.push(func);
+	}
+
+	window.onload = function() {
+		for (let i = 0; i < _loadingFunctions.length; i++) {
+			_loadingFunctions[i]();
+		}
+	};
+</script>
+
+{% include collapse.html %}
+{% include checkbox.html %}

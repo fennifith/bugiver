@@ -1,0 +1,63 @@
+<style>
+	checkbox {
+		display: block;
+	}
+	
+	checkbox > span {
+		display: inline-block !important;
+		display: inline-flex !important;
+		max-width: calc(100% - 64px);
+	}
+
+	input[type=checkbox] {
+		display: none;
+		outline: none;
+	}
+
+	input[type=checkbox] + label {
+		display: inline-block;
+		height: 24px;
+		width: 24px;
+		padding: 0;
+		margin: 0;
+		margin-left: 24px;
+		margin-right: 16px;
+		background-image: url("/images/ic-checkbox-unchecked.svg");
+		outline: none;
+		transform: translateY(6px);
+		cursor: pointer;
+	}
+
+	input[type=checkbox]:checked + label {
+		background-image: url("/images/ic-checkbox-checked.svg");
+	}
+</style>
+
+<script type="text/javascript">
+	addOnLoad(function() {
+		let labelElements = document.getElementsByTagName("label");
+		var _checkedCounter = 0;
+
+		for (let i = 0; i < labelElements.length; i++) {
+			const labelElement = labelElements[i];
+		
+			let forId;
+			if (labelElement.getAttribute && forId = labelElement.hasAttribute("for")) {
+				let inputElement = document.getElementById(forId);
+				if (inputElement && inputElement.getAttribute("type") == "checkbox") {
+					inputElement.addEventListener("click", function() {
+						const img = new Image();
+						img.id = "img" + _checkedCounter;
+						img.onload = function() {
+							labelElement.style.backgroundImage = "url(" + img.src + ")";
+						};
+
+						let imgURL = "/images/ic-checkbox-" + (this.checked ? "check" : "uncheck") + "ed.svg";
+						labelElement.style.backgroundImage = "url(" + imgURL + ")";
+						img.src = imgURL + "?count=" + (checkedCounter++);
+					});
+				}
+			}
+		}	
+	});
+</script>

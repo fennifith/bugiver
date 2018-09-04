@@ -20,7 +20,7 @@ permalink: /
 		<h1>Options</h1>
 		<collapse>
 			<h4>Languages: <span id="selectedLanguages">All</span></h4>
-			<div id="languages"></div>
+			<div id="languages" class="grid"></div>
 		</collapse>
 		<button onclick="randomIssue();">Done</button>
 	</div>
@@ -65,8 +65,8 @@ permalink: /
 				ElementUtil.clearElement(_languagesElement);
 				
 				for (let i = 0; i < _langs.length; i++) {
-					_languagesElement.append(ElementUtil.createElement("<div class=\"checkbox\"><input id=\"language" + _langs[i] + "\" name=\"" 
-							+ _langs[i] + "\" type=\"checkbox\"><label for=\"language" + _langs[i] + "\"></label><span>" + _langs[i] + "</span><div>"));
+					_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + _langs[i] + "\" name=\"" 
+							+ _langs[i] + "\" type=\"checkbox\"><label for=\"language" + _langs[i] + "\"></label><span>" + _langs[i] + "</span></checkbox>"));
 					
 					let checkbox = document.getElementById("language" + _langs[i]);
 					checkbox.addEventListener("click", function() {

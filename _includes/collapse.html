@@ -1,0 +1,39 @@
+<style>
+	collapse {
+		display: block;
+	}
+
+	collapse > div {
+		max-height: 0;
+		overflow: hidden;
+		transition: max-height 0.2s;
+	}
+
+	collapse > *:not(div) {
+		cursor: pointer;
+	}
+
+	collapse > *:not(div)::after {
+		content: '+';
+		float: right;
+	}
+
+	collapse.active > *:not(div)::after {
+		content: '-';
+	}
+</style>
+
+<script type="text/javascript">
+	addOnLoad(function() {
+		let elements = document.getElementsByTagName("collapse");
+		for (let i = 0; i < elements.length; i++) {
+			elements[i].addEventListener("click", function() {
+				this.classList.toggle("active");
+				let content = this.getElementsByTagName("div")[0];
+				if (content.style.maxHeight)
+					content.style.maxHeight = null;
+				else content.style.maxHeight = content.scrollHeight + "px";
+			});
+		}
+	});
+</script>
