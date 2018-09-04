@@ -40,10 +40,8 @@
 
 		for (let i = 0; i < labelElements.length; i++) {
 			const labelElement = labelElements[i];
-		
-			let forId;
-			if (labelElement.getAttribute && forId = labelElement.hasAttribute("for")) {
-				let inputElement = document.getElementById(forId);
+			if (labelElement.getAttribute && labelElement.hasAttribute("for")) {
+				let inputElement = document.getElementById(labelElement.getAttribute("for"));
 				if (inputElement && inputElement.getAttribute("type") == "checkbox") {
 					inputElement.addEventListener("click", function() {
 						const img = new Image();
