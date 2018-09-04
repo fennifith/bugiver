@@ -29,35 +29,59 @@ permalink: /
 
 <script type="text/javascript" src="https://jfenn.me/js/utils.js"></script>
 <script type="text/javascript">
-	const infoElement = document.getElementById("info");
-	const optionElement = document.getElementById("option");
-	const issueElement = document.getElementById("issue");
+	const _gitHubLanguagesURL = "https://raw.githubusercontent.com/github/linguist/master/lib/linguist/languages.yml";
+
+	const _infoElement = document.getElementById("info");
+	const _optionElement = document.getElementById("option");
+	const _issueElement = document.getElementById("issue");
 
 	let args = UrlUtil.getCurrentArguments();
-	const token = args.token ? args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
+	const _token = args.token ? args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
 
-	if (token) configureIssue();
+	var _langs = [];
+
+	if (_token) configureIssue();
 
 	function configureIssue() {
-		infoElement.style.display = "none";
-		issueElement.style.display = "none";
+		_infoElement.style.display = "none";
+		_issueElement.style.display = "none";
 		
 		if (args.repo && args.issue)
 			loadIssue(args.repo, args.issue);
 		else {
-			optionElement.style.display = null;
+			_optionElement.style.display = null;
 		}
 	}
 
 	function randomIssue() {
-		infoElement.style.display = "none";
-		optionElement.style.display = "none";
-		issueElement.style.display = "none";
+		_infoElement.style.display = "none";
+		_optionElement.style.display = "none";
+		_issueElement.style.display = "none";
+
+		if (_langs.length > 0) {
+			
+		} else {
+			var req = new XMLHttpRequest();
+			req.onreadystatechange = function() {
+				if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+					let reg = /(\n)([A-Za-z])([A-Za-z0-9_ ]{0,})(:)([ ]{0,})(\n)/g;
+					let args;
+					while (args = reg.exec(req.responseText)) {
+						if (args[3]) _langs.push(args[2] + args[3]);
+					}
+
+					if (_langs.length > 0)
+						randomIssue();
+				}
+			};
+			req.open("GET", _gitHubLanguagesURL, true);	
+			req.send();
+		}
 	}
 
 	function loadIssue(repo, issue) {
-		infoElement.style.display = "none";
-		optionElement.style.display = "none";
-		issueElement.style.display = "none";
+		_infoElement.style.display = "none";
+		_optionElement.style.display = "none";
+		_issueElement.style.display = "none";
 	}
 </script>
