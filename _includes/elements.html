@@ -1,8 +1,16 @@
 <script type="text/javascript">
 	const _loadingFunctions = [];
+	const _elementFunctions = {};
 
 	function addOnLoad(func) {
 		_loadingFunctions.push(func);
+	}
+
+	function addOnElement(thing, func) {
+		if (!_elementFunctions[thing])
+			_elementFunctions[thing] = [];
+		
+		_elementFunctions[thing].push(func);
 	}
 
 	window.onload = function() {
@@ -10,6 +18,14 @@
 			_loadingFunctions[i]();
 		}
 	};
+
+	function onElement(element) {
+		if (_elementFunctions[element.tagName]) {
+			for (let i = 0; i < _elementFunctions[element.tagName].length; i++) {
+				_elementFunctions[element.tagName][i](element);
+			}
+		}
+	}
 </script>
 
 {% include collapse.html %}

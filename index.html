@@ -67,8 +67,8 @@ permalink: /
 				ElementUtil.clearElement(_languagesElement);
 				
 				for (let i = 0; i < _langs.length; i++) {
-					_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + _langs[i] + "\" name=\"" 
-							+ _langs[i] + "\" type=\"checkbox\"><label for=\"language" + _langs[i] + "\"></label><span>" + _langs[i] + "</span></checkbox>"));
+					_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + _langs[i] + "\" name=\"" + _langs[i] 
+							+ "\" type=\"checkbox\"><label id=\"languageLabel" + _langs[i] + "\" for=\"language" + _langs[i] + "\"></label><span>" + _langs[i] + "</span></checkbox>"));
 					
 					let checkbox = document.getElementById("language" + _langs[i]);
 					checkbox.checked = _selectedLangs[_langs[i]];
@@ -89,6 +89,8 @@ permalink: /
 						if (localStorage)
 							localStorage.setItem("{{ site.storage_id }}/pref_langs", JSON.stringify(_selectedLangs));
 					});
+
+					onElement(document.getElementById("languageLabel" + _langs[i]));
 				}
 
 				let text = "";

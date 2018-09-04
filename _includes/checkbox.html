@@ -32,6 +32,10 @@
 	input[type=checkbox]:checked + label {
 		background-image: url("/images/ic-checkbox-checked.svg");
 	}
+
+	input[type=checkbox]:checked ~ span {
+		color: #0091EA !important;
+	}
 </style>
 
 <script type="text/javascript">
@@ -40,23 +44,31 @@
 		var _checkedCounter = 0;
 
 		for (let i = 0; i < labelElements.length; i++) {
-			const labelElement = labelElements[i];
-			if (labelElement.getAttribute && labelElement.hasAttribute("for")) {
-				let inputElement = document.getElementById(labelElement.getAttribute("for"));
-				if (inputElement && inputElement.getAttribute("type") == "checkbox") {
-					inputElement.addEventListener("click", function() {
-						const img = new Image();
-						img.id = "img" + _checkedCounter;
-						img.onload = function() {
-							labelElement.style.backgroundImage = "url(" + img.src + ")";
-						};
+			onElement(labelElements[i]);
+		}
+	});
 
-						let imgURL = "-checkbox-" + (this.checked ? "check" : "uncheck");
-						labelElement.style.backgroundImage = "url(/images/ic" + imgURL + "ed.svg)";
-						img.src = "/images/anim" + imgURL + ".svg?count=" + (_checkedCounter++);
-					});
-				}
+	addOnElement("label", function(element) {
+		const labelElement = element;
+		if (labelElement.getAttribute && labelElement.hasAttribute("for")) {
+			let inputElement = document.getElementById(labelElement.getAttribute("for"));
+			if (inputElement && inputElement.getAttribute("type") == "checkbox") {
+				inputElement.addEventListener("change", function() {
+					const img = new Image();
+					img.id = "img" + _checkedCounter;
+					img.onload = function() {
+						labelElement.style.backgroundImage = "url(" + img.src + ")";
+					};
+
+					let imgURL = "-checkbox-" + (this.checked ? "check" : "uncheck");
+					labelElement.style.backgroundImage = "url(/images/ic" + imgURL + "ed.svg)";
+					img.src = "/images/anim" + imgURL + ".svg?count=" + (_checkedCounter++);
+				});
+
+				inputElement.parentElement.addEventListener("click", function() {
+					this.getElementsByTagName("input")[0].click();
+				});
 			}
-		}	
+		}
 	});
 </script>
