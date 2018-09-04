@@ -34,7 +34,11 @@ permalink: /
 
 <script type="text/javascript" src="https://jfenn.me/js/utils.js"></script>
 <script type="text/javascript">
-	const _gitHubLanguagesURL = "https://raw.githubusercontent.com/github/linguist/master/lib/linguist/languages.yml";
+	const _github {
+		following: {},
+		repos: {},
+		languages: {}
+	};
 
 	const _infoElement = document.getElementById("info");
 	
@@ -47,7 +51,6 @@ permalink: /
 	let args = UrlUtil.getCurrentArguments();
 	const _token = args.token || !localStorage ? args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
 
-	var _langs = [];
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
 	_selectedLangs = _selectedLangs ? _selectedLangs : {};
 
@@ -66,12 +69,12 @@ permalink: /
 				_selectedLanguagesElement.innerText = "All";
 				ElementUtil.clearElement(_languagesElement);
 				
-				for (let i = 0; i < _langs.length; i++) {
-					_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + _langs[i] + "\" name=\"" + _langs[i] 
-							+ "\" type=\"checkbox\"><label id=\"languageLabel" + _langs[i] + "\" for=\"language" + _langs[i] + "\"></label><span>" + _langs[i] + "</span></checkbox>"));
+				for (let lang in _github.languages) {
+					_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + lang + "\" name=\"" + lang
+							+ "\" type=\"checkbox\"><label id=\"languageLabel" + lang + "\" for=\"language" + lang + "\"></label><span>" + lang + "</span></checkbox>"));
 					
-					let checkbox = document.getElementById("language" + _langs[i]);
-					checkbox.checked = _selectedLangs[_langs[i]];
+					let checkbox = document.getElementById("language" + lang);
+					checkbox.checked = _selectedLangs[lang];
 					checkbox.addEventListener("click", function() {
 						if (this.checked)
 							_selectedLangs[this.getAttribute("name")] = true;
@@ -90,7 +93,7 @@ permalink: /
 							localStorage.setItem("{{ site.storage_id }}/pref_langs", JSON.stringify(_selectedLangs));
 					});
 
-					onElement(document.getElementById("languageLabel" + _langs[i]));
+					onElement(document.getElementById("languageLabel" + lang));
 				}
 
 				let text = "";
@@ -131,5 +134,56 @@ permalink: /
 		_infoElement.style.display = "none";
 		_optionElement.style.display = "none";
 		_issueElement.style.display = "none";
+	}
+
+	function fetchFollowing(user, func) {
+		const req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.responseText);
+				for (let i = 0; i < obj.length; i++) {
+					_github.following.push(obj[i]);
+				}
+			}
+		};
+		req.open("GET", "https://api.github.com/users/" + login + "/following", true);
+		req.send();
+	}
+
+	function fetchRepositories(user, func) {
+		const req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.responseText);
+			}
+		};
+		req.open("GET", "https://api.github.com/users/" + login + "/repositories", true);
+		req.send();		
+	}
+
+	function fetchLanguages(repo, func) {
+		const req = new XMLHttpRequest();
+		req onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.responseText);
+				for (let lang in obj) {
+					_github.languages[lang] = true;
+				}
+			}
+		};
+		req.open("GET", "https://api.github.com/repos/" + repo + "/languages", true);
+		req.send();
+	}
+
+	function fetchIssues(repo, func) {
+		const req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.responseText);
+
+			}
+		};
+		req.open("GET", "https://api.github.com/repos/" + repo + "/issues", true);
+		req.send();
 	}
 </script>
