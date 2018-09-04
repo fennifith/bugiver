@@ -50,9 +50,9 @@
 							labelElement.style.backgroundImage = "url(" + img.src + ")";
 						};
 
-						let imgURL = "/images/ic-checkbox-" + (this.checked ? "check" : "uncheck") + "ed.svg";
-						labelElement.style.backgroundImage = "url(" + imgURL + ")";
-						img.src = imgURL + "?count=" + (_checkedCounter++);
+						let imgURL = "-checkbox-" + (this.checked ? "check" : "uncheck");
+						labelElement.style.backgroundImage = "url(/images/ic" + imgURL + "ed.svg)";
+						img.src = "/images/anim" + imgURL + ".svg?count=" + (_checkedCounter++);
 					});
 				}
 			}
