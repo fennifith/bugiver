@@ -18,6 +18,10 @@ permalink: /
 	</div>
 	<div id="option" style="display: none;">
 		<h1>Options</h1>
+		<collapse>
+			<h4>Languages: <span id="selectedLanguages">All</span></h4>
+			<div id="languages"></div>
+		</collapse>
 		<button onclick="randomIssue();">Done</button>
 	</div>
 	<div id="issue" style="display: none;">
@@ -32,13 +36,18 @@ permalink: /
 	const _gitHubLanguagesURL = "https://raw.githubusercontent.com/github/linguist/master/lib/linguist/languages.yml";
 
 	const _infoElement = document.getElementById("info");
+	
 	const _optionElement = document.getElementById("option");
+	const _languagesElement = document.getElementById("languages");
+	const _selectedLanguagesElement = document.getElementById("selectedLanguages");
+	
 	const _issueElement = document.getElementById("issue");
 
 	let args = UrlUtil.getCurrentArguments();
 	const _token = args.token ? args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
 
 	var _langs = [];
+	var _selectedLangs = {};
 
 	if (_token) configureIssue();
 
@@ -50,6 +59,48 @@ permalink: /
 			loadIssue(args.repo, args.issue);
 		else {
 			_optionElement.style.display = null;
+
+			if (_langs.length > 0) {
+				_selectedLanguagesElement.innerText = "All";
+				ElementUtil.clearElement(_languagesElement);
+				
+				for (let i = 0; i < _langs.length; i++) {
+					_languagesElement.append(ElementUtil.createElement("<div class=\"checkbox\"><input id=\"language" + _langs[i] + "\" name=\"" 
+							+ _langs[i] + "\" type=\"checkbox\"><label for=\"language" + _langs[i] + "\"></label><span>" + _langs[i] + "</span><div>"));
+					
+					let checkbox = document.getElementById("language" + _langs[i]);
+					checkbox.addEventListener("click", function() {
+						if (this.checked)
+							_selectedLangs[this.getAttribute("name")] = true;
+						else delete _selectedLangs[this.getAttribute("name")];
+
+						let text = "";
+						for (let lang in _selectedLangs) {
+							text += ", " + lang;
+						}
+
+						if (text.length > 0)
+							_selectedLanguagesElement.innerText = text.substring(2);		
+						else _selectedLanguagesElement.innerText = "All";
+					});
+				}
+			} else {
+				var req = new XMLHttpRequest();
+				req.onreadystatechange = function() {
+					if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+						let reg = /(\n)([A-Za-z])([A-Za-z0-9_ ]{0,})(:)([ ]{0,})(\n)/g;
+						let args;
+						while (args = reg.exec(req.responseText)) {
+							if (args[3]) _langs.push(args[2] + args[3]);
+						}
+	
+						if (_langs.length > 0)
+							configureIssue();
+					}
+				};
+				req.open("GET", _gitHubLanguagesURL, true);	
+				req.send();
+			}
 		}
 	}
 
@@ -57,26 +108,6 @@ permalink: /
 		_infoElement.style.display = "none";
 		_optionElement.style.display = "none";
 		_issueElement.style.display = "none";
-
-		if (_langs.length > 0) {
-			
-		} else {
-			var req = new XMLHttpRequest();
-			req.onreadystatechange = function() {
-				if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-					let reg = /(\n)([A-Za-z])([A-Za-z0-9_ ]{0,})(:)([ ]{0,})(\n)/g;
-					let args;
-					while (args = reg.exec(req.responseText)) {
-						if (args[3]) _langs.push(args[2] + args[3]);
-					}
-
-					if (_langs.length > 0)
-						randomIssue();
-				}
-			};
-			req.open("GET", _gitHubLanguagesURL, true);	
-			req.send();
-		}
 	}
 
 	function loadIssue(repo, issue) {
