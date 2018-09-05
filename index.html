@@ -22,6 +22,10 @@ permalink: /
 			<h4>Languages: <span id="selectedLanguages">All</span></h4>
 			<div id="languages" class="grid"></div>
 		</collapse>
+		<collapse>
+			<h4>Tags: <span id="selectedTags">All</span></h4>
+			<div id="tags" class="grid"></div>
+		</collapse>
 		<br>
 		<button onclick="randomIssue();">Done</button>
 	</div>
@@ -34,10 +38,12 @@ permalink: /
 
 <script type="text/javascript" src="https://jfenn.me/js/utils.js"></script>
 <script type="text/javascript">
-	const _github {
+	const _github = {
 		following: {},
 		repos: {},
-		languages: {}
+		languages: {},
+		labels: {},
+		issues: {}
 	};
 
 	const _infoElement = document.getElementById("info");
@@ -54,18 +60,18 @@ permalink: /
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
 	_selectedLangs = _selectedLangs ? _selectedLangs : {};
 
-	if (_token) configureIssue();
+	if (_token) dispConfigureIssue();
 
-	function configureIssue() {
+	function dispConfigureIssue() {
 		_infoElement.style.display = "none";
 		_issueElement.style.display = "none";
 		
 		if (args.repo && args.issue)
-			loadIssue(args.repo, args.issue);
+			dispLoadIssue(args.repo, args.issue);
 		else {
 			_optionElement.style.display = null;
 
-			if (_langs.length > 0) {
+			if (Object.keys(_github.languages).length > 0) {
 				_selectedLanguagesElement.innerText = "All";
 				ElementUtil.clearElement(_languagesElement);
 				
@@ -105,73 +111,93 @@ permalink: /
 					_selectedLanguagesElement.innerText = text.substring(2);		
 				else _selectedLanguagesElement.innerText = "All";
 			} else {
-				var req = new XMLHttpRequest();
-				req.onreadystatechange = function() {
-					if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-						let reg = /(\n)([A-Za-z])([A-Za-z0-9_ ]{0,})(:)([ ]{0,})(\n)/g;
-						let args;
-						while (args = reg.exec(req.responseText)) {
-							if (args[3]) _langs.push(args[2] + args[3]);
-						}
-	
-						if (_langs.length > 0)
-							configureIssue();
-					}
-				};
-				req.open("GET", _gitHubLanguagesURL, true);	
-				req.send();
+				fetchFollowing("TheAndroidMaster", function() { dispConfigureIssue(); });
 			}
 		}
 	}
 
-	function randomIssue() {
+	function dispRandomIssue() {
 		_infoElement.style.display = "none";
 		_optionElement.style.display = "none";
 		_issueElement.style.display = "none";
 	}
 
-	function loadIssue(repo, issue) {
+	function dispIssue(repo, issue) {
 		_infoElement.style.display = "none";
 		_optionElement.style.display = "none";
 		_issueElement.style.display = "none";
 	}
 
 	function fetchFollowing(user, func) {
+		for (let what in _github.following) {
+			if (func)
+				func(_github.following);
+			
+			return;
+		}
+	
 		const req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
 				for (let i = 0; i < obj.length; i++) {
-					_github.following.push(obj[i]);
+					_github.following[obj[i].login] = obj[i];
+					fetchRepositories(obj[i].login, i == obj.length - 1 ? func : null);
 				}
 			}
 		};
-		req.open("GET", "https://api.github.com/users/" + login + "/following", true);
+		req.open("GET", "https://api.github.com/users/" + user + "/following", true);
+		if (_token)
+			req.setRequestHeader("Authorization", "token " + _token);
+		
 		req.send();
 	}
 
-	function fetchRepositories(user, func) {
+	function fetchRepositories(user, func) {	
 		const req = new XMLHttpRequest();
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
+				for (let i = 0; i < obj.length; i++) {
+					if (!obj[i].fork && obj[i].has_issues) {
+						_github.repos[obj[i].name] = obj[i];
+						fetchLanguages(obj[i].full_name);
+					}
+				}
+
+				let keys = Object.keys(_github.repos);
+				for (let i = 0; i < keys.length; i++) {
+					fetchIssues(_github.repos[keys[i]].full_name, i == keys.length - 1 ? func : null);
+				}
+
+				if (func)
+					func(_github.repos);
 			}
 		};
-		req.open("GET", "https://api.github.com/users/" + login + "/repositories", true);
+		req.open("GET", "https://api.github.com/users/" + user + "/repos", true);
+		if (_token)
+			req.setRequestHeader("Authorization", "token " + _token);
+		
 		req.send();		
 	}
 
 	function fetchLanguages(repo, func) {
 		const req = new XMLHttpRequest();
-		req onreadystatechange = function() {
+		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
 				for (let lang in obj) {
 					_github.languages[lang] = true;
 				}
+
+				if (func)
+					func(_github.languages);
 			}
 		};
 		req.open("GET", "https://api.github.com/repos/" + repo + "/languages", true);
+		if (_token)
+			req.setRequestHeader("Authorization", "token " + _token);
+		
 		req.send();
 	}
 
@@ -180,10 +206,23 @@ permalink: /
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
+				for (let i = 0; i < obj.length; i++) {
+					if (!obj[i].pull_request) {
+					_github.issues[repo + "/issues/" + obj[i].number] = obj[i];
+						for (let i2 = 0; obj[i].labels && i2 < obj[i].labels.length; i2++) {
+							_github.labels[obj[i].labels[i2].name] = true;
+						}
+					}
+				}
 
+				if (func)
+					func(_github.labels);
 			}
 		};
 		req.open("GET", "https://api.github.com/repos/" + repo + "/issues", true);
+		if (_token)
+			req.setRequestHeader("Authorization", "token " + _token);
+		
 		req.send();
 	}
 </script>
