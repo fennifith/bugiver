@@ -18,13 +18,16 @@ permalink: /
 	</div>
 	<div id="option" style="display: none;">
 		<h1>Options</h1>
+		<br>
 		<collapse>
 			<h4>Languages: <span id="selectedLanguages">All</span></h4>
-			<div id="languages" class="grid"></div>
+			<div id="languages" class="grid" style="margin-left: -24px;"></div>
+			<br>
 		</collapse>
 		<collapse>
-			<h4>Tags: <span id="selectedTags">All</span></h4>
-			<div id="tags" class="grid"></div>
+			<h4>Labels: <span id="selectedLabels">All</span></h4>
+			<div id="labels" class="grid" style="margin-left: -24px;"></div>
+			<br>
 		</collapse>
 		<br>
 		<button onclick="randomIssue();">Done</button>
@@ -49,6 +52,8 @@ permalink: /
 	const _optionElement = document.getElementById("option");
 	const _languagesElement = document.getElementById("languages");
 	const _selectedLanguagesElement = document.getElementById("selectedLanguages");
+	const _labelsElement = document.getElementById("labels");
+	const _selectedLabelsElement = document.getElementById("selectedLabels"); 
 	
 	const _issueElement = document.getElementById("issue");
 
@@ -57,6 +62,9 @@ permalink: /
 
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
 	_selectedLangs = _selectedLangs ? _selectedLangs : {};
+
+	var _selectedLabels = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_labels")) : {};
+	_selectedLabels = _selectedLabels ? _selectedLabels : {};
 
 	if (_token) dispConfigureIssue();
 
@@ -69,7 +77,7 @@ permalink: /
 		else {
 			_optionElement.style.display = null;
 
-			if (Object.keys(_github.languages).length > 0) {
+			if (Object.keys(_github.issues).length > 0) {
 				_selectedLanguagesElement.innerText = "All";
 				ElementUtil.clearElement(_languagesElement);
 				
@@ -84,13 +92,9 @@ permalink: /
 							_selectedLangs[this.getAttribute("name")] = true;
 						else delete _selectedLangs[this.getAttribute("name")];
 
-						let text = "";
-						for (let lang in _selectedLangs) {
-							text += ", " + lang;
-						}
-
+						let text = Object.keys(_selectedLangs).join(", ");
 						if (text.length > 0)
-							_selectedLanguagesElement.innerText = text.substring(2);		
+							_selectedLanguagesElement.innerText = text;		
 						else _selectedLanguagesElement.innerText = "All";
 
 						if (localStorage)
@@ -100,14 +104,41 @@ permalink: /
 					onElement(document.getElementById("languageLabel" + lang));
 				}
 
-				let text = "";
-				for (let lang in _selectedLangs) {
-					text += ", " + lang;
+				let text = Object.keys(_selectedLangs).join(", ");
+				if (text.length > 0)
+					_selectedLanguagesElement.innerText = text;		
+				else _selectedLanguagesElement.innerText = "All";
+
+				_selectedLabelsElement.innerText = "All";
+				ElementUtil.clearElement(_labelsElement);
+				
+				for (let name in _github.labels) {
+					_labelsElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"label" + name + "\" name=\"" + name
+							+ "\" type=\"checkbox\"><label id=\"labelLabel" + name + "\" for=\"label" + name + "\"></label><span>" + name + "</span></checkbox>"));
+					
+					let checkbox = document.getElementById("label" + name);
+					checkbox.checked = _selectedLabels[name];
+					checkbox.addEventListener("click", function() {
+						if (this.checked)
+							_selectedLabels[this.getAttribute("name")] = true;
+						else delete _selectedLabels[this.getAttribute("name")];
+
+						let text = Object.keys(_selectedLabels).join(", ");
+						if (text.length > 0)
+							_selectedLabelsElement.innerText = text;		
+						else _selectedLabelsElement.innerText = "All";
+
+						if (localStorage)
+							localStorage.setItem("{{ site.storage_id }}/pref_labels", JSON.stringify(_selectedLabels));
+					});
+
+					onElement(document.getElementById("labelLabel" + name));
 				}
 
+				text = Object.keys(_selectedLabels).join(", ");
 				if (text.length > 0)
-					_selectedLanguagesElement.innerText = text.substring(2);		
-				else _selectedLanguagesElement.innerText = "All";
+					_selectedLabelsElement.innerText = text;		
+				else _selectedLabelsElement.innerText = "All";
 			} else {
 				fetchStuff(function() { dispConfigureIssue(); });
 			}
@@ -146,7 +177,7 @@ permalink: /
 
 						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes.length; i3++) {
 							for (let i4 = 0; i4 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes.length; i4++) {
-								_github.labels[obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name] = true;
+								_github.labels[StringUtil.titleize(obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name)] = true;
 							}
 						
 							_github.issues[
