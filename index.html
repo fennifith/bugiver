@@ -30,11 +30,15 @@ permalink: /
 			<br>
 		</collapse>
 		<br>
-		<button onclick="randomIssue();">Done</button>
+		<button onclick="dispRandomIssue();">Done</button>
 	</div>
 	<div id="issue" style="display: none;">
-		
-		<button onclick="randomIssue();">Next Bug</button>
+		<h2>Your assigned issue is... <span id="issueRepo"></span> #<span id="issueNum"></span></h2>
+		<h3 id="issueName">Loading content...</h3>
+		<div id="issueContent"></div>
+		<h4>Labels: <span id="issueLabels"></span></h4>
+		<br>
+		<button onclick="dispRandomIssue();">Different Bug</button>
 	</div>
 	<br><br>
 </main>
@@ -56,9 +60,14 @@ permalink: /
 	const _selectedLabelsElement = document.getElementById("selectedLabels"); 
 	
 	const _issueElement = document.getElementById("issue");
+	const _issueRepoElement = document.getElementById("issueRepo");
+	const _issueNumElement = document.getElementById("issueNum");
+	const _issueNameElement = document.getElementById("issueName");
+	const _issueContentElement = document.getElementById("issueContent");
+	const _issueLabelsElement = document.getElementById("issueLabels");
 
-	let args = UrlUtil.getCurrentArguments();
-	const _token = args.token || !localStorage ? args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
+	const _args = UrlUtil.getCurrentArguments();
+	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
 
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
 	_selectedLangs = _selectedLangs ? _selectedLangs : {};
@@ -73,8 +82,8 @@ permalink: /
 		_issueElement.style.display = "none";
 		_optionElement.style.display = "none";
 		
-		if (args.repo && args.issue)
-			dispLoadIssue(args.repo, args.issue);
+		if (_args.repo && _args.issue)
+			dispIssue(_args.repo, _args.issue);
 		else if (Object.keys(_github.issues).length > 0) {
 			_optionElement.style.display = null;
 				
@@ -145,15 +154,74 @@ permalink: /
 	}
 
 	function dispRandomIssue() {
+		if (Object.keys(_github.issues).length < 1) {
+			delete _args.repo;
+			delete _args.issue;
+			dispConfigureIssue();
+			return;
+		}
+	
 		_infoElement.style.display = "none";
 		_optionElement.style.display = "none";
 		_issueElement.style.display = "none";
+
+		let issues = [];
+		for (let issue in _github.issues) {
+			let hasLang = Object.keys(_selectedLangs).length < 1;
+			for (let lang in _selectedLangs) {
+				if (_github.issues[issue].languages.includes(lang)) {
+					hasLang = true;
+					break;
+				}
+			}
+
+			let hasLabel = Object.keys(_selectedLabels).length < 1;
+			for (let label in _selectedLabels) {
+				if (_github.issues[issue].labels.includes(label)) {
+					hasLabel = true;
+					break;
+				}
+			}
+
+			if (hasLang && hasLabel)
+				issues.push(issue);
+		}
+		
+		let issue = issues[Math.floor(Math.random() * issues.length)].split("#");
+		dispIssue(issue[0], issue[1]);
 	}
 
 	function dispIssue(repo, issue) {
 		_infoElement.style.display = "none";
 		_optionElement.style.display = "none";
-		_issueElement.style.display = "none";
+		_issueElement.style.display = null;
+
+		_args.repo = repo;
+		_args.issue = issue;
+		window.history.replaceState({}, null, "?" + UrlUtil.argumentsToString(_args));
+
+		_issueRepoElement.innerText = repo;
+		_issueNumElement.innerText = issue;
+		_issueNameElement.innerText = "Loading...";
+
+		const req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+				let obj = JSON.parse(req.responseText);
+				_issueNameElement.innerText = obj.title;
+				_issueContentElement.innerText = obj.body;
+
+				let labels = "";
+				for (let i = 0; i < obj.labels.length; i++) {
+					labels += ", " + obj.labels[i].name;
+				}
+
+				_issueLabelsElement.innerText = labels.length > 2 ? labels.substring(2) : "None";
+			}
+		};
+		req.open("GET", "https://api.github.com/repos/" + repo + "/issues/" + issue, true);
+		req.setRequestHeader("Authorization", "token " + _token);
+		req.send();
 	}
 
 	function fetchStuff(func) {
@@ -170,19 +238,28 @@ permalink: /
 				let obj = JSON.parse(req.responseText);
 				for (let i = 0; i < obj.data.viewer.following.nodes.length; i++) {
 					for (let i2 = 0; i2 < obj.data.viewer.following.nodes[i].repositories.nodes.length; i2++) {
+						let langs = [];
 						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes.length; i3++) {
-							_github.languages[obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes[i3].name] = true;
+							let lang = obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes[i3].name;
+							_github.languages[lang] = true;
+							langs.push(lang);
 						}
 
 						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes.length; i3++) {
+							let labels = [];
 							for (let i4 = 0; i4 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes.length; i4++) {
-								_github.labels[StringUtil.titleize(obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name)] = true;
+								let label = StringUtil.titleize(obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name);
+								_github.labels[label] = true;
+								labels.push(label);
 							}
 						
 							_github.issues[
-								obj.data.viewer.following.nodes[i].repositories.nodes[i2].nameWithOwner + "issues/"
+								obj.data.viewer.following.nodes[i].repositories.nodes[i2].nameWithOwner + "#"
 								+ obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].number
-							] = true;
+							] = {
+								languages: langs,
+								labels: labels
+							};
 						}
 					}
 				}
