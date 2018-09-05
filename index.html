@@ -39,8 +39,6 @@ permalink: /
 <script type="text/javascript" src="https://jfenn.me/js/utils.js"></script>
 <script type="text/javascript">
 	const _github = {
-		following: {},
-		repos: {},
 		languages: {},
 		labels: {},
 		issues: {}
@@ -111,7 +109,7 @@ permalink: /
 					_selectedLanguagesElement.innerText = text.substring(2);		
 				else _selectedLanguagesElement.innerText = "All";
 			} else {
-				fetchFollowing("TheAndroidMaster", function() { dispConfigureIssue(); });
+				fetchStuff(function() { dispConfigureIssue(); });
 			}
 		}
 	}
@@ -128,10 +126,10 @@ permalink: /
 		_issueElement.style.display = "none";
 	}
 
-	function fetchFollowing(user, func) {
+	function fetchStuff(func) {
 		for (let what in _github.following) {
 			if (func)
-				func(_github.following);
+				func();
 			
 			return;
 		}
@@ -140,89 +138,33 @@ permalink: /
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
-				for (let i = 0; i < obj.length; i++) {
-					_github.following[obj[i].login] = obj[i];
-					fetchRepositories(obj[i].login, i == obj.length - 1 ? func : null);
-				}
-			}
-		};
-		req.open("GET", "https://api.github.com/users/" + user + "/following", true);
-		if (_token)
-			req.setRequestHeader("Authorization", "token " + _token);
-		
-		req.send();
-	}
+				for (let i = 0; i < obj.data.viewer.following.nodes.length; i++) {
+					for (let i2 = 0; i2 < obj.data.viewer.following.nodes[i].repositories.nodes.length; i2++) {
+						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes.length; i3++) {
+							_github.languages[obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes[i3].name] = true;
+						}
 
-	function fetchRepositories(user, func) {	
-		const req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-				let obj = JSON.parse(req.responseText);
-				for (let i = 0; i < obj.length; i++) {
-					if (!obj[i].fork && obj[i].has_issues) {
-						_github.repos[obj[i].name] = obj[i];
-						fetchLanguages(obj[i].full_name);
-					}
-				}
-
-				let keys = Object.keys(_github.repos);
-				for (let i = 0; i < keys.length; i++) {
-					fetchIssues(_github.repos[keys[i]].full_name, i == keys.length - 1 ? func : null);
-				}
-
-				if (func)
-					func(_github.repos);
-			}
-		};
-		req.open("GET", "https://api.github.com/users/" + user + "/repos", true);
-		if (_token)
-			req.setRequestHeader("Authorization", "token " + _token);
-		
-		req.send();		
-	}
-
-	function fetchLanguages(repo, func) {
-		const req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-				let obj = JSON.parse(req.responseText);
-				for (let lang in obj) {
-					_github.languages[lang] = true;
-				}
-
-				if (func)
-					func(_github.languages);
-			}
-		};
-		req.open("GET", "https://api.github.com/repos/" + repo + "/languages", true);
-		if (_token)
-			req.setRequestHeader("Authorization", "token " + _token);
-		
-		req.send();
-	}
-
-	function fetchIssues(repo, func) {
-		const req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-				let obj = JSON.parse(req.responseText);
-				for (let i = 0; i < obj.length; i++) {
-					if (!obj[i].pull_request) {
-					_github.issues[repo + "/issues/" + obj[i].number] = obj[i];
-						for (let i2 = 0; obj[i].labels && i2 < obj[i].labels.length; i2++) {
-							_github.labels[obj[i].labels[i2].name] = true;
+						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes.length; i3++) {
+							for (let i4 = 0; i4 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes.length; i4++) {
+								_github.labels[obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name] = true;
+							}
+						
+							_github.issues[
+								obj.data.viewer.following.nodes[i].repositories.nodes[i2].nameWithOwner + "issues/"
+								+ obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].number
+							] = true;
 						}
 					}
 				}
 
 				if (func)
-					func(_github.labels);
+					func();
 			}
 		};
-		req.open("GET", "https://api.github.com/repos/" + repo + "/issues", true);
+		req.open("POST", "https://api.github.com/graphql", true);
 		if (_token)
-			req.setRequestHeader("Authorization", "token " + _token);
+			req.setRequestHeader("Authorization", "bearer " + _token);
 		
-		req.send();
+		req.send("{\"query\": \"query { viewer { following(first: 30) { nodes { repositories(isFork: false, first: 20) { nodes { nameWithOwner, languages(first: 3) {  nodes { name } }, issues(states: [OPEN], first: 20) { nodes { number, labels(first: 2) { nodes { name } } } } } } } } } }\"}");
 	}
 </script>
