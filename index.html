@@ -18,12 +18,12 @@ permalink: /
 	</div>
 	<div id="option" style="display: none;">
 		<h1>Options</h1>
-		<br>
 		<collapse>
 			<h4>Languages: <span id="selectedLanguages">All</span></h4>
 			<div id="languages" class="grid" style="margin-left: -24px;"></div>
 			<br>
 		</collapse>
+		<br>
 		<collapse>
 			<h4>Labels: <span id="selectedLabels">All</span></h4>
 			<div id="labels" class="grid" style="margin-left: -24px;"></div>
@@ -71,77 +71,76 @@ permalink: /
 	function dispConfigureIssue() {
 		_infoElement.style.display = "none";
 		_issueElement.style.display = "none";
+		_optionElement.style.display = "none";
 		
 		if (args.repo && args.issue)
 			dispLoadIssue(args.repo, args.issue);
-		else {
+		else if (Object.keys(_github.issues).length > 0) {
 			_optionElement.style.display = null;
-
-			if (Object.keys(_github.issues).length > 0) {
-				_selectedLanguagesElement.innerText = "All";
-				ElementUtil.clearElement(_languagesElement);
 				
-				for (let lang in _github.languages) {
-					_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + lang + "\" name=\"" + lang
-							+ "\" type=\"checkbox\"><label id=\"languageLabel" + lang + "\" for=\"language" + lang + "\"></label><span>" + lang + "</span></checkbox>"));
-					
-					let checkbox = document.getElementById("language" + lang);
-					checkbox.checked = _selectedLangs[lang];
-					checkbox.addEventListener("click", function() {
-						if (this.checked)
-							_selectedLangs[this.getAttribute("name")] = true;
-						else delete _selectedLangs[this.getAttribute("name")];
-
-						let text = Object.keys(_selectedLangs).join(", ");
-						if (text.length > 0)
-							_selectedLanguagesElement.innerText = text;		
-						else _selectedLanguagesElement.innerText = "All";
-
-						if (localStorage)
-							localStorage.setItem("{{ site.storage_id }}/pref_langs", JSON.stringify(_selectedLangs));
-					});
-
-					onElement(document.getElementById("languageLabel" + lang));
-				}
-
-				let text = Object.keys(_selectedLangs).join(", ");
-				if (text.length > 0)
-					_selectedLanguagesElement.innerText = text;		
-				else _selectedLanguagesElement.innerText = "All";
-
-				_selectedLabelsElement.innerText = "All";
-				ElementUtil.clearElement(_labelsElement);
+			_selectedLanguagesElement.innerText = "All";
+			ElementUtil.clearElement(_languagesElement);
 				
-				for (let name in _github.labels) {
-					_labelsElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"label" + name + "\" name=\"" + name
-							+ "\" type=\"checkbox\"><label id=\"labelLabel" + name + "\" for=\"label" + name + "\"></label><span>" + name + "</span></checkbox>"));
+			for (let lang in _github.languages) {
+				_languagesElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"language" + lang + "\" name=\"" + lang
+						+ "\" type=\"checkbox\"><label id=\"languageLabel" + lang + "\" for=\"language" + lang + "\"></label><span>" + lang + "</span></checkbox>"));
 					
-					let checkbox = document.getElementById("label" + name);
-					checkbox.checked = _selectedLabels[name];
-					checkbox.addEventListener("click", function() {
-						if (this.checked)
-							_selectedLabels[this.getAttribute("name")] = true;
-						else delete _selectedLabels[this.getAttribute("name")];
+				let checkbox = document.getElementById("language" + lang);
+				checkbox.checked = _selectedLangs[lang];
+				checkbox.addEventListener("click", function() {
+					if (this.checked)
+						_selectedLangs[this.getAttribute("name")] = true;
+					else delete _selectedLangs[this.getAttribute("name")];
 
-						let text = Object.keys(_selectedLabels).join(", ");
-						if (text.length > 0)
-							_selectedLabelsElement.innerText = text;		
-						else _selectedLabelsElement.innerText = "All";
+					let text = Object.keys(_selectedLangs).join(", ");
+					if (text.length > 0)
+						_selectedLanguagesElement.innerText = text;		
+					else _selectedLanguagesElement.innerText = "All";
 
-						if (localStorage)
-							localStorage.setItem("{{ site.storage_id }}/pref_labels", JSON.stringify(_selectedLabels));
-					});
+					if (localStorage)
+						localStorage.setItem("{{ site.storage_id }}/pref_langs", JSON.stringify(_selectedLangs));
+				});
 
-					onElement(document.getElementById("labelLabel" + name));
-				}
-
-				text = Object.keys(_selectedLabels).join(", ");
-				if (text.length > 0)
-					_selectedLabelsElement.innerText = text;		
-				else _selectedLabelsElement.innerText = "All";
-			} else {
-				fetchStuff(function() { dispConfigureIssue(); });
+				onElement(document.getElementById("languageLabel" + lang));
 			}
+
+			let text = Object.keys(_selectedLangs).join(", ");
+			if (text.length > 0)
+				_selectedLanguagesElement.innerText = text;		
+			else _selectedLanguagesElement.innerText = "All";
+
+			_selectedLabelsElement.innerText = "All";
+			ElementUtil.clearElement(_labelsElement);
+				
+			for (let name in _github.labels) {
+				_labelsElement.append(ElementUtil.createElement("<checkbox class=\"item\"><input id=\"label" + name + "\" name=\"" + name
+						+ "\" type=\"checkbox\"><label id=\"labelLabel" + name + "\" for=\"label" + name + "\"></label><span>" + name + "</span></checkbox>"));
+					
+				let checkbox = document.getElementById("label" + name);
+				checkbox.checked = _selectedLabels[name];
+				checkbox.addEventListener("click", function() {
+					if (this.checked)
+						_selectedLabels[this.getAttribute("name")] = true;
+					else delete _selectedLabels[this.getAttribute("name")];
+
+					let text = Object.keys(_selectedLabels).join(", ");
+					if (text.length > 0)
+						_selectedLabelsElement.innerText = text;		
+					else _selectedLabelsElement.innerText = "All";
+
+					if (localStorage)
+						localStorage.setItem("{{ site.storage_id }}/pref_labels", JSON.stringify(_selectedLabels));
+				});
+
+				onElement(document.getElementById("labelLabel" + name));
+			}
+
+			text = Object.keys(_selectedLabels).join(", ");
+			if (text.length > 0)
+				_selectedLabelsElement.innerText = text;		
+			else _selectedLabelsElement.innerText = "All";
+		} else {
+			fetchStuff(function() { dispConfigureIssue(); });
 		}
 	}
 
