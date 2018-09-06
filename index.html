@@ -17,8 +17,7 @@ permalink: /
 		</collapse>
 		<br>
 		<button onclick="dispRandomIssue();">Load Issue</button>
-		<br><br>
-		<br><hr><br>
+		<br><br><br>
 	</div>
 	<h2>Links</h2>
 	{% for link in site.links %}
@@ -36,6 +35,15 @@ permalink: /
 			<img class="round" src="/images/ic/person/svg">
 		</object>
 		<span>{{ contributor.login }}</span>
+	</a>
+	{% endfor %}
+	<h2>Dependencies</h2>
+	{% for dep in site.deps %}
+	<a class="link" href="{{ dep.url }}">
+		<object data="{{ dep.icon }}" type="image/png">
+			<img src="/images/ic/link.svg">
+		</object>
+		<span>{{ dep.name }}</span>
 	</a>
 	{% endfor %}
 </sidebar>
@@ -57,10 +65,9 @@ permalink: /
 	</div>
 	<div id="issue" style="display: none;">
 		<h2>Your assigned issue is... <a id="issueLink"><span id="issueRepo"></span> #<span id="issueNum"></span></a></h2>
-		
+		<div id="issueLabels"></div>
 		<h3 id="issueName">Loading content...</h3>
 		<div id="issueContent"></div>
-		<h4>Labels: <span id="issueLabels"></span></h4>
 		<br>
 	</div>
 	<br><br>
@@ -237,10 +244,10 @@ permalink: /
 
 				let labels = "";
 				for (let i = 0; i < obj.labels.length; i++) {
-					labels += ", " + obj.labels[i].name;
+					labels += "<code>" + obj.labels[i].name + "</code> &nbsp;";
 				}
 
-				_issueLabelsElement.innerText = labels.length > 2 ? labels.substring(2) : "None";
+				_issueLabelsElement.innerHTML = labels.length > 0 ? labels : "";
 			}
 		};
 		req.open("GET", "https://api.github.com/repos/" + repo + "/issues/" + issue, true);
