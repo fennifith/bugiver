@@ -93,6 +93,7 @@ permalink: /
 
 	const _args = UrlUtil.getCurrentArguments();
 	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
+	_optionElement.style.display = _token ? "none" : null;
 	_signInElement.style.display = _token ? "none" : null;
 
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
@@ -172,7 +173,7 @@ permalink: /
 			if (text.length > 0)
 				_selectedLabelsElement.innerText = text;		
 			else _selectedLabelsElement.innerText = "All";
-		} else {
+		} else if (_token) {
 			fetchStuff(function() { dispConfigureIssue(); });
 		}
 	}
