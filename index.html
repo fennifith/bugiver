@@ -19,7 +19,8 @@ permalink: /
 		<button onclick="dispRandomIssue();">Load Issue</button>
 		<br><br><br>
 	</div>
-	<h2>Links</h2>
+	<h2>About</h2>
+	<h3>Links</h3>
 	{% for link in site.links %}
 	<a class="link" href="{{ link.url }}">
 		<object data="{{ link.icon }}" type="image/png">
@@ -28,7 +29,7 @@ permalink: /
 		<span>{{ link.name }}</span>
 	</a>
 	{% endfor %}
-	<h2>Contributors</h2>
+	<h3>Contributors</h3>
 	{% for contributor in site.contributors %}
 	<a class="link" href="{{ contributor.url }}">
 		<object class="round" data="{{ contributor.avatar }}" type="image/png">
@@ -37,7 +38,7 @@ permalink: /
 		<span>{{ contributor.login }}</span>
 	</a>
 	{% endfor %}
-	<h2>Dependencies</h2>
+	<h3>Dependencies</h3>
 	{% for dep in site.deps %}
 	<a class="link" href="{{ dep.url }}">
 		<object data="{{ dep.icon }}" type="image/png">
@@ -65,6 +66,8 @@ permalink: /
 	</div>
 	<div id="issue" style="display: none;">
 		<h2>Your assigned issue is... <a id="issueLink"><span id="issueRepo"></span> #<span id="issueNum"></span></a></h2>
+		<a id="issueAuthor" style="display: flex; align-items: center; text-decoration: none;"><img id="issueAuthorImage" class="round" style="height: 24px;">&nbsp;&nbsp;<span id="issueAuthorName"></span></a>
+		<br><br>
 		<div id="issueLabels"></div>
 		<h3 id="issueName">Loading content...</h3>
 		<div id="issueContent"></div>
@@ -74,6 +77,7 @@ permalink: /
 </main>
 
 <script type="text/javascript" src="https://jfenn.me/js/utils.js"></script>
+<script type="text/javascript" src="https://cdn.rawgit.com/showdownjs/showdown/1.8.6/dist/showdown.min.js"></script>
 <script type="text/javascript">
 	const _github = {
 		languages: {},
@@ -97,6 +101,9 @@ permalink: /
 	const _issueLinkElement = document.getElementById("issueLink");
 	const _issueContentElement = document.getElementById("issueContent");
 	const _issueLabelsElement = document.getElementById("issueLabels");
+	const _issueAuthorElement = document.getElementById("issueAuthor");
+	const _issueAuthorImageElement = document.getElementById("issueAuthorImage");
+	const _issueAuthorNameElement = document.getElementById("issueAuthorName");
 
 	const _args = UrlUtil.getCurrentArguments();
 	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
@@ -239,8 +246,10 @@ permalink: /
 		req.onreadystatechange = function() {
 			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
 				let obj = JSON.parse(req.responseText);
+				let converter = new showdown.Converter();
+				
 				_issueNameElement.innerText = obj.title;
-				_issueContentElement.innerText = obj.body;
+				_issueContentElement.innerHTML = converter.makeHtml(obj.body);
 
 				let labels = "";
 				for (let i = 0; i < obj.labels.length; i++) {
@@ -248,6 +257,10 @@ permalink: /
 				}
 
 				_issueLabelsElement.innerHTML = labels.length > 0 ? labels : "";
+
+				_issueAuthorElement.href = obj.user.html_url;
+				_issueAuthorImageElement.src = obj.user.avatar_url;
+				_issueAuthorNameElement.innerText = obj.user.login;
 			}
 		};
 		req.open("GET", "https://api.github.com/repos/" + repo + "/issues/" + issue, true);
