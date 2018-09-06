@@ -4,6 +4,9 @@ permalink: /
 ---
 
 <sidebar>
+	<div id="loading" style="display: none;">
+		<b>Loading stuff, give it a moment...</b>
+	</div>
 	<div id="option" style="display: none;">
 		<h2>Options</h2>
 		<collapse>
@@ -88,6 +91,7 @@ permalink: /
 
 	const _infoElement = document.getElementById("info");
 	const _signInElement = document.getElementById("signin");
+	const _loadingElement = document.getElementById("loading");
 	
 	const _optionElement = document.getElementById("option");
 	const _languagesElement = document.getElementById("languages");
@@ -284,6 +288,8 @@ permalink: /
 			return;
 		}
 
+		_loadingElement.style.display = null;
+
 		if (!_user) {
 			const req = new XMLHttpRequest();
 			req.onreadystatechange = function() {
@@ -331,6 +337,7 @@ permalink: /
 						}
 					}
 
+					_loadingElement.style.display = "none";
 					if (func)
 						func();
 				}
