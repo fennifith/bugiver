@@ -72,6 +72,7 @@ permalink: /
 		<h3 id="issueName">Loading content...</h3>
 		<div id="issueContent"></div>
 		<br>
+		<a id="issueComments"><span id="issueCommentsNum">0</span> Comments</a>
 	</div>
 	<br><br>
 </main>
@@ -104,6 +105,8 @@ permalink: /
 	const _issueAuthorElement = document.getElementById("issueAuthor");
 	const _issueAuthorImageElement = document.getElementById("issueAuthorImage");
 	const _issueAuthorNameElement = document.getElementById("issueAuthorName");
+	const _issueComments = document.getElementById("issueComments");
+	const _issueCommentsNum = document.getElementById("issueCommentsNum");
 
 	const _args = UrlUtil.getCurrentArguments();
 	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
@@ -261,6 +264,9 @@ permalink: /
 				_issueAuthorElement.href = obj.user.html_url;
 				_issueAuthorImageElement.src = obj.user.avatar_url;
 				_issueAuthorNameElement.innerText = obj.user.login;
+
+				_issueComments.href = obj.html_url;
+				_issueCommentsNum.innerText = obj.comments;
 			}
 		};
 		req.open("GET", "https://api.github.com/repos/" + repo + "/issues/" + issue, true);
@@ -316,6 +322,6 @@ permalink: /
 		if (_token)
 			req.setRequestHeader("Authorization", "bearer " + _token);
 		
-		req.send("{\"query\": \"query { viewer { following(first: 30) { nodes { repositories(isFork: false, first: 20) { nodes { nameWithOwner, languages(first: 3) {  nodes { name } }, issues(states: [OPEN], first: 20) { nodes { number, labels(first: 2) { nodes { name } } } } } } } } } }\"}");
+		req.send("{\"query\": \"query { viewer { following(first: 30) { nodes { repositories(first: 20, isFork: false) { nodes { nameWithOwner, languages(first: 3) {  nodes { name } }, issues(first: 20, states: [OPEN]) { nodes { number, labels(first: 2) { nodes { name } } } } } } } } } }\"}");
 	}
 </script>
