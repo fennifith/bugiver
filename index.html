@@ -3,6 +3,43 @@ layout: default
 permalink: /
 ---
 
+<sidebar>
+	<div id="option">
+		<h2>Options</h2>
+		<collapse>
+			<h4>Languages: <span id="selectedLanguages">All</span></h4>
+			<div id="languages" style="margin-left: -24px;"></div>
+		</collapse>
+		<br>
+		<collapse>
+			<h4>Labels: <span id="selectedLabels">All</span></h4>
+			<div id="labels" style="margin-left: -24px;"></div>
+		</collapse>
+		<br>
+		<button onclick="dispRandomIssue();">Load Issue</button>
+		<br><br>
+		<br><hr><br>
+	</div>
+	<h2>Links</h2>
+	{% for link in site.links %}
+	<a class="link" href="{{ link.url }}">
+		<object class="round" cata="{{ link.icon }}" type="image/png">
+			<img src="/images/ic/link.svg">
+		</object>
+		<span>{{ link.name }}</span>
+	</a>
+	{% endfor %}
+	<h2>Contributors</h2>
+	{% for contributor in site.contributors %}
+	<a class="link" href="{{ contributor.url }}">
+		<object class="round" cata="{{ contributor.avatar }}" type="image/png">
+			<img class="round" src="/images/ic/person/svg">
+		</object>
+		<span>{{ contributor.login }}</span>
+	</a>
+	{% endfor %}
+</sidebar>
+
 <main>
 	<br><br>
 	<div id="info" style="text-align: center;">
@@ -10,35 +47,21 @@ permalink: /
 		<p>
 			Bugiver is a simple website that iterates through everyone that you are following and selects a random issue in a completely random
 			repository in a language of your choice. I have designed it as my personal "I have nothing to do" button that gives me something
-			to do in an attempt to encourage myself to contribute to more repositories than I create. Its source code, which you can find on
-			<a href="/redirects/?t=github&d=bugiver">GitHub</a>, is published under the Apache 2.0 License.
+			to do in a possibly futile attempt to encourage myself to contribute to more repositories than I create. Its source code, which you 
+			can find on <a href="/redirects/?t=github&d=bugiver">GitHub</a>, is published under the Apache 2.0 License.
 		</p>
-		<p>To start bug hunting, sign into your GitHub account below to give this website access to your account.</p>
-		<button onclick="location.href='https://github.com/login/oauth/authorize?client_id={{ site.client_id }}';">Sign In</button>
-	</div>
-	<div id="option" style="display: none;">
-		<h1>Options</h1>
-		<collapse>
-			<h4>Languages: <span id="selectedLanguages">All</span></h4>
-			<div id="languages" class="grid" style="margin-left: -24px;"></div>
-			<br>
-		</collapse>
-		<br>
-		<collapse>
-			<h4>Labels: <span id="selectedLabels">All</span></h4>
-			<div id="labels" class="grid" style="margin-left: -24px;"></div>
-			<br>
-		</collapse>
-		<br>
-		<button onclick="dispRandomIssue();">Done</button>
+		<div id="signin">
+			<p>To start bug hunting, sign into your GitHub account below to give this website access to your account.</p>
+			<button onclick="location.href='https://github.com/login/oauth/authorize?client_id={{ site.client_id }}';">Sign In</button>
+		</div>
 	</div>
 	<div id="issue" style="display: none;">
-		<h2>Your assigned issue is... <span id="issueRepo"></span> #<span id="issueNum"></span></h2>
+		<h2>Your assigned issue is... <a id="issueLink"><span id="issueRepo"></span> #<span id="issueNum"></span></a></h2>
+		
 		<h3 id="issueName">Loading content...</h3>
 		<div id="issueContent"></div>
 		<h4>Labels: <span id="issueLabels"></span></h4>
 		<br>
-		<button onclick="dispRandomIssue();">Different Bug</button>
 	</div>
 	<br><br>
 </main>
@@ -52,6 +75,7 @@ permalink: /
 	};
 
 	const _infoElement = document.getElementById("info");
+	const _signInElement = document.getElementById("signin");
 	
 	const _optionElement = document.getElementById("option");
 	const _languagesElement = document.getElementById("languages");
@@ -63,11 +87,13 @@ permalink: /
 	const _issueRepoElement = document.getElementById("issueRepo");
 	const _issueNumElement = document.getElementById("issueNum");
 	const _issueNameElement = document.getElementById("issueName");
+	const _issueLinkElement = document.getElementById("issueLink");
 	const _issueContentElement = document.getElementById("issueContent");
 	const _issueLabelsElement = document.getElementById("issueLabels");
 
 	const _args = UrlUtil.getCurrentArguments();
 	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
+	_signInElement.style.display = _token ? "none" : null;
 
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
 	_selectedLangs = _selectedLangs ? _selectedLangs : {};
@@ -77,12 +103,10 @@ permalink: /
 
 	if (_token) dispConfigureIssue();
 
-	function dispConfigureIssue() {
-		_infoElement.style.display = "none";
-		_issueElement.style.display = "none";
+	function dispConfigureIssue(shouldIfNotLoadDoThingYes) {
 		_optionElement.style.display = "none";
 		
-		if (_args.repo && _args.issue)
+		if (_args.repo && _args.issue && !shouldIfNotLoadDoThingYes)
 			dispIssue(_args.repo, _args.issue);
 		else if (Object.keys(_github.issues).length > 0) {
 			_optionElement.style.display = null;
@@ -162,7 +186,6 @@ permalink: /
 		}
 	
 		_infoElement.style.display = "none";
-		_optionElement.style.display = "none";
 		_issueElement.style.display = "none";
 
 		let issues = [];
@@ -193,13 +216,14 @@ permalink: /
 
 	function dispIssue(repo, issue) {
 		_infoElement.style.display = "none";
-		_optionElement.style.display = "none";
 		_issueElement.style.display = null;
+		dispConfigureIssue(true);
 
 		_args.repo = repo;
 		_args.issue = issue;
 		window.history.replaceState({}, null, "?" + UrlUtil.argumentsToString(_args));
 
+		_issueLinkElement.href = "https://github.com/" + repo + "/issues/" + issue;
 		_issueRepoElement.innerText = repo;
 		_issueNumElement.innerText = issue;
 		_issueNameElement.innerText = "Loading...";
