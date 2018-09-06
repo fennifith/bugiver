@@ -110,6 +110,8 @@ permalink: /
 
 	const _args = UrlUtil.getCurrentArguments();
 	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
+	var _user = null;
+	
 	_signInElement.style.display = _token ? "none" : null;
 
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
@@ -281,47 +283,63 @@ permalink: /
 			
 			return;
 		}
-	
-		const req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-			if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
-				let obj = JSON.parse(req.responseText);
-				for (let i = 0; i < obj.data.viewer.following.nodes.length; i++) {
-					for (let i2 = 0; i2 < obj.data.viewer.following.nodes[i].repositories.nodes.length; i2++) {
-						let langs = [];
-						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes.length; i3++) {
-							let lang = obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes[i3].name;
-							_github.languages[lang] = true;
-							langs.push(lang);
-						}
 
-						for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes.length; i3++) {
-							let labels = [];
-							for (let i4 = 0; i4 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes.length; i4++) {
-								let label = StringUtil.titleize(obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name);
-								_github.labels[label] = true;
-								labels.push(label);
-							}
+		if (!_user) {
+			const req = new XMLHttpRequest();
+			req.onreadystatechange = function() {
+				if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+					_user = JSON.parse(req.responseText).login;
+					fetchStuff(func);
+				}
+			};
+			req.open("GET", "https://api.github.com/user", true);
+			req.setRequestHeader("Authorization", "token " + _token);
+			req.send();
+		} else {
+			const req = new XMLHttpRequest();
+			req.onreadystatechange = function() {
+				if (req.readyState === 4 && (req.status === 200 || req.status == 0)) {
+					let obj = JSON.parse(req.responseText);
+					for (let i = 0; i < obj.data.viewer.following.nodes.length; i++) {
+						for (let i2 = 0; i2 < obj.data.viewer.following.nodes[i].repositories.nodes.length; i2++) {
+							if (obj.data.viewer.following.nodes[i].repositories.nodes[i2].nameWithOwner.split("/")[0] === _user)
+								continue;
 						
-							_github.issues[
-								obj.data.viewer.following.nodes[i].repositories.nodes[i2].nameWithOwner + "#"
-								+ obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].number
-							] = {
-								languages: langs,
-								labels: labels
-							};
+							let langs = [];
+							for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes.length; i3++) {
+								let lang = obj.data.viewer.following.nodes[i].repositories.nodes[i2].languages.nodes[i3].name;
+								_github.languages[lang] = true;
+								langs.push(lang);
+							}
+
+							for (let i3 = 0; i3 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes.length; i3++) {
+								let labels = [];
+								for (let i4 = 0; i4 < obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes.length; i4++) {
+									let label = StringUtil.titleize(obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].labels.nodes[i4].name);
+									_github.labels[label] = true;
+									labels.push(label);
+								}
+						
+								_github.issues[
+									obj.data.viewer.following.nodes[i].repositories.nodes[i2].nameWithOwner + "#"
+									+ obj.data.viewer.following.nodes[i].repositories.nodes[i2].issues.nodes[i3].number
+								] = {
+									languages: langs,
+									labels: labels
+								};
+							}
 						}
 					}
-				}
 
-				if (func)
-					func();
-			}
-		};
-		req.open("POST", "https://api.github.com/graphql", true);
-		if (_token)
-			req.setRequestHeader("Authorization", "bearer " + _token);
+					if (func)
+						func();
+				}
+			};
+			req.open("POST", "https://api.github.com/graphql", true);
+			if (_token)
+				req.setRequestHeader("Authorization", "bearer " + _token);
 		
-		req.send("{\"query\": \"query { viewer { following(first: 30) { nodes { repositories(first: 20, isFork: false) { nodes { nameWithOwner, languages(first: 3) {  nodes { name } }, issues(first: 20, states: [OPEN]) { nodes { number, labels(first: 2) { nodes { name } } } } } } } } } }\"}");
+			req.send("{\"query\": \"query { viewer { following(first: 30) { nodes { repositories(first: 20, isFork: false) { nodes { nameWithOwner, languages(first: 3) {  nodes { name } }, issues(first: 20, states: [OPEN]) { nodes { number, labels(first: 2) { nodes { name } } } } } } } } } }\"}");
+		}
 	}
 </script>
