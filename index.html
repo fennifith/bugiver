@@ -4,7 +4,7 @@ permalink: /
 ---
 
 <sidebar>
-	<div id="option">
+	<div id="option" style="display: null;">
 		<h2>Options</h2>
 		<collapse>
 			<h4>Languages: <span id="selectedLanguages">All</span></h4>
@@ -93,7 +93,6 @@ permalink: /
 
 	const _args = UrlUtil.getCurrentArguments();
 	const _token = _args.token || !localStorage ? _args.token : localStorage.getItem("{{ site.storage_id }}/access_token");
-	_optionElement.style.display = _token ? "none" : null;
 	_signInElement.style.display = _token ? "none" : null;
 
 	var _selectedLangs = localStorage ? JSON.parse(localStorage.getItem("{{ site.storage_id }}/pref_langs")) : {};
