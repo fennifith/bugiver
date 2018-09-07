@@ -7,3 +7,7 @@ Bugiver is a simple website that iterates through everyone that you are followin
 3. Upon getting a result, users are redirected to the main page, where a lot of stuff happens.
 4. Potential issue candidates are added to a map, and a separate map of languages and labels are formed to allow users to filter them.
 5. An issue is selected at random, one more API request is sent, and the resulting issue data is displayed.
+
+## Contributing
+
+Contributions are accepted. See [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for more information.
