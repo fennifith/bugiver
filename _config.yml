@@ -1,5 +1,8 @@
 name: Bugiver
 description: A small site that gives you an issue to fix when there is nothing to do.
+url: https://jfenn.me/bugiver
+baseurl: "/"
+
 client_id: 8a518f3373e19665e2b0
 storage_id: bugiver
 links:
@@ -17,3 +20,6 @@ deps:
   - name: ShowdownJS
     icon: http://showdownjs.com/favicon.ico
     url: http://showdownjs.com/
+
+sass:
+    sass_dir: ./css
