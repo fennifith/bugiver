@@ -1,0 +1,29 @@
+{
+  "name": "bugiver",
+  "version": "1.0.0",
+  "description": "Bugiver is a simple website that iterates through everyone that you are following on GitHub and selects a random issue in a completely random repository in a language of your choice. I have designed it as my personal \"I have nothing to do\" button that gives me something to do in a possibly futile attempt to encourage myself to contribute to more repositories than I create.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack-dev-server",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fennifith/bugiver.git"
+  },
+  "author": "James Fenn <18jafenn90@gmail.com> (https://jfenn.me/)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/fennifith/bugiver/issues"
+  },
+  "homepage": "https://github.com/fennifith/bugiver#readme",
+  "devDependencies": {
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.39.3",
+    "webpack-cli": "^3.3.8",
+    "webpack-dev-server": "^3.8.0"
+  },
+  "dependencies": {
+    "declarativ": "0.0.8"
+  }
+}
